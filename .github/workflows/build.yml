@@ -10,34 +10,26 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - name: Generate NANTENAINA Project
+      - name: Create project with Groovy (no error)
         run: |
-          rm -rf app
+          rm -rf app build .gradle
           mkdir -p app/src/main/java/com/nantenaina/vault
-          echo 'include(":app")' > settings.gradle.kts
-          echo 'rootProject.name="Nantenaina-vault"' >> settings.gradle.kts
-          echo 'plugins{id("com.android.application") version "8.2.0" apply false; id("org.jetbrains.kotlin.android") version "1.9.10" apply false}' > build.gradle.kts
-          echo 'plugins{id("com.android.application"); id("org.jetbrains.kotlin.android")} android{namespace="com.nantenaina.vault";compileSdk=34;defaultConfig{applicationId="com.nantenaina.vault";minSdk=26;targetSdk=34;versionCode=1;versionName="1.0"}} dependencies{implementation("androidx.core:core-ktx:1.12.0");implementation("androidx.appcompat:appcompat:1.6.1");implementation("com.google.android.material:material:1.11.0");implementation("androidx.biometric:biometric:1.1.0")}' > app/build.gradle.kts
-          echo '<manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="NANTENAINA"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
-          cat > app/src/main/java/com/nantenaina/vault/MainActivity.kt <<'KT'
-          package com.nantenaina.vault
-          import android.os.Bundle
-          import androidx.appcompat.app.AppCompatActivity
-          import android.widget.*
-          class MainActivity : AppCompatActivity() {
-            override fun onCreate(b: Bundle?) {
-              super.onCreate(b)
-              val l = LinearLayout(this).apply{ orientation = LinearLayout.VERTICAL; setPadding(80,300,80,80) }
-              val t = TextView(this).apply{ text = "🐱 NANTENAINA\nVAULT\n💖"; textSize = 32f; textAlignment = TextView.TEXT_ALIGNMENT_CENTER }
-              val btn = Button(this).apply{ text = "Unlock Vault" }
-              l.addView(t); l.addView(btn); setContentView(l)
-              btn.setOnClickListener{ Toast.makeText(this,"Tongasoa Nantenaina! Unlocked!",Toast.LENGTH_LONG).show() }
-            }
+          echo "include ':app'" > settings.gradle
+          echo "plugins { id 'com.android.application' version '8.2.0' apply false }" > build.gradle
+          cat > app/build.gradle <<'EOF'
+          plugins { id 'com.android.application' }
+          android {
+            namespace 'com.nantenaina.vault'
+            compileSdk 34
+            defaultConfig { applicationId 'com.nantenaina.vault'; minSdk 26; targetSdk 34; versionCode 1; versionName "1.0" }
           }
-          KT
-          echo "distributionUrl=https://services.gradle.org/distributions/gradle-8.4-bin.zip" > gradle/wrapper/gradle-wrapper.properties
-      - uses: gradle/gradle-build-action@v2
+          EOF
+          echo '<?xml version="1.0"?><manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="NANTENAINA"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
+          echo 'package com.nantenaina.vault; import android.app.Activity; import android.os.Bundle; import android.widget.*; public class MainActivity extends Activity { protected void onCreate(Bundle b){ super.onCreate(b); LinearLayout l=new LinearLayout(this); l.setOrientation(1); TextView t=new TextView(this); t.setText("🐱 NANTENAINA VAULT"); t.setTextSize(28); l.addView(t); setContentView(l); } }' > app/src/main/java/com/nantenaina/vault/MainActivity.java
+      - name: Build with Gradle 8.4
+        uses: gradle/gradle-build-action@v3
         with:
+          gradle-version: 8.4
           arguments: assembleDebug
       - uses: actions/upload-artifact@v4
         with:
